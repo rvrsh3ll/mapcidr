@@ -1,7 +1,9 @@
 name: 🔨 Build Test
 on:
-  push:
   pull_request:
+    paths:
+      - '**.go'
+      - '**.mod'
   workflow_dispatch:
 
 
@@ -13,15 +15,25 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
 
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Test
-        run: go test .
-        working-directory: cmd/mapcidr/
-
       - name: Build
         run: go build .
+        working-directory: cmd/mapcidr/
+
+      - name: Test
+        run: go test ./...
+        working-directory: .
+
+      - name: Integration Tests
+        env:
+          GH_ACTION: true
+        run: bash run.sh
+        working-directory: integration_tests/
+
+      - name: Race Test
+        run: go run -race . -cidr 192.168.1.224/30
         working-directory: cmd/mapcidr/
